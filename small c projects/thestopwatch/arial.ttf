@@ -1,0 +1,54 @@
+#include <SFML/Graphics.hpp>
+#include <chrono>
+#include <string>
+
+int main() {
+    sf::RenderWindow window(sf::VideoMode(400, 200), "Stopwatch");
+
+    sf::Font font;
+    if (!font.loadFromFile("arial.ttf")) {  // Load font from local file
+        return -1;
+    }
+
+    sf::Text text("Press Space to start/stop", font, 24);
+    text.setPosition(20.f, 50.f);
+    text.setFillColor(sf::Color::White);
+
+    bool running = false;
+    auto start = std::chrono::steady_clock::now();
+    std::chrono::seconds elapsed(0);
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
+                if (!running) {
+                    running = true;
+                    start = std::chrono::steady_clock::now();
+                } else {
+                    running = false;
+                    elapsed += std::chrono::duration_cast<std::chrono::seconds>(
+                        std::chrono::steady_clock::now() - start);
+                }
+            }
+        }
+
+        // Calculate elapsed time to display
+        std::chrono::seconds displayTime = elapsed;
+        if (running) {
+            displayTime += std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::steady_clock::now() - start);
+        }
+
+        text.setString("Time: " + std::to_string(displayTime.count()) + " seconds\nPress Space to start/stop");
+
+        window.clear(sf::Color::Black);
+        window.draw(text);
+        window.display();
+    }
+
+    return 0;
+}
